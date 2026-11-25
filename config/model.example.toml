@@ -1,0 +1,36 @@
+# The model Hermodr starts, uses and stops on every run. Copy to model.toml and edit that one.
+# Strict: if anything here does not match the machine, the run does not start.
+
+name = "my-model"                    # free text, goes into each summary as provenance
+
+[server]
+exe    = 'C:\IA\llama\vulkan\llama-server.exe'
+model  = 'C:\IA\modelos\my-model.gguf'
+sha256 = "put the published sha256 of the gguf here"
+host   = "127.0.0.1"
+port   = 18100
+# Everything llama-server gets besides -m, --host and --port. Each option is checked against --help.
+args = ["-ngl", "99", "-fa", "on", "-c", "16384", "-np", "1", "--jinja", "--reasoning", "off"]
+startup_timeout_s = 300
+request_timeout_s = 300
+
+[sampling]
+# Sent on EVERY request, so nothing is left to llama-server defaults (its min_p is not 0).
+# Use the values the model's maker recommends.
+temperature = 1.0
+top_p       = 0.95
+top_k       = 64
+min_p       = 0.0
+
+[guards]
+# Below this prompt speed (tokens/s, only on prompts of 500+ tokens) the gpu is spilling into ram: stop.
+min_prompt_tps = 200
+# Windows only: dedicated gpu memory other programs may use before starting (MB). 0 = don't check.
+max_other_vram_mb = 3000
+refuse_if_other_llama_server = true
+
+[output]
+# How the json schema is asked for. "json_schema" works on current llama-server builds;
+# "json_object" is the older form. hermodr model check tells which one this build accepts.
+structured = "json_schema"
+max_tokens = 700

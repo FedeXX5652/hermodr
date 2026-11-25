@@ -1,0 +1,34 @@
+# How stories are scored and how many make it to an edition. Copy to weights.yaml.
+
+score:                 # weight of each signal (each signal goes from 0 to 1)
+  breadth: 3.0         # how many different outlets, wire copies not counted
+  cross: 3.0           # how many different families
+  persistence: 1.0     # how long it has been running
+  frontpage: 1.5       # how many outlets have it near the top of their home page
+  relevance: 2.0       # how much it matches profile.yaml
+  novelty: 1.0         # new story = 1, update of one already shown = 0.5
+
+caps:                  # where each signal reaches 1
+  breadth: 8
+  cross: 4
+  persistence_h: 48
+  frontpage: 3
+
+budget:
+  # [hours covered, stories]. Between points it grows with the square root of the time.
+  points: [[3, 13], [6, 17], [24, 30], [72, 47], [120, 54]]
+  min_relative: 0.25     # below this fraction of the best score, out
+  should_know: 3         # "Deberias saber": important, outside the profile
+  explore: 3             # "Para explorar": from families I see less
+
+clustering:
+  window_h: 72           # a note joins a story only if the story moved in this window
+  title_ratio: 72        # rapidfuzz token_set_ratio between titles (0-100)
+  lead_jaccard: 0.08     # with a close title, minimum overlap of the first words
+  strong_jaccard: 0.25   # overlap that is enough on its own
+  wire_jaccard: 0.6      # above this, two notes are the same wire copy
+  lead_words: 80
+
+blind_spot:
+  min_notes: 3
+  one_family_share: 0.8  # one family has this share of the notes or more

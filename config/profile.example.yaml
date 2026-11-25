@@ -1,0 +1,16 @@
+# What I care about. Copy to profile.yaml.
+# Each topic: keywords (any form, accents don't matter) and a weight. Negative weight = less of that.
+
+topics:
+  - name: Mercados
+    weight: 1.0
+    keywords: [bonos, dolar, inflacion, tasa, bcra, riesgo pais, merval]
+  - name: Tecnología
+    weight: 0.8
+    keywords: [inteligencia artificial, chip, software, linux, open source]
+  - name: Fútbol
+    weight: -0.5
+    keywords: [futbol, liga profesional, mundial de clubes]
+
+# Sections in the order they show up
+sections: [argentina, mundo, mercados, tecnologia]

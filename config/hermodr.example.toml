@@ -1,0 +1,24 @@
+# General settings. Copy to hermodr.toml (hermodr init does it) and edit that one.
+
+timezone = "America/Argentina/Buenos_Aires"
+data_dir = "data"                    # relative to the project folder: db, editions, images, logs
+
+[collect]
+user_agent      = "hermodr/0.1 (personal news digest)"
+timeout_s       = 20
+per_host_delay_s = 1.0               # pause between requests to the same site
+max_article_kb  = 3000               # bigger pages are skipped
+fetch_articles  = true               # false: work only with what the feed brings (title + summary)
+first_run_hours = 24                 # how far back the very first edition looks
+
+[edition]
+title = "Hermóðr"
+
+[serve]
+host = "127.0.0.1"                   # local only. 0.0.0.0 opens it to the LAN
+port = 8077
+
+[notify]
+# Optional message when an edition is ready. Empty = off. The text is appended as the last argument.
+# example: command = ["ssh", "user@host", "notify"]
+command = []

@@ -1,0 +1,32 @@
+# News sources. Copy to sources.yaml and put your own. hermodr sources check tests every feed.
+#
+# id        : short and unique, it never changes (it's the key in the db)
+# name      : how it shows on the page
+# feeds     : one or more rss/atom feeds, each with the section it feeds
+# frontpage : optional. Home page url: notes linked near the top count as "on the front page"
+# primary   : true for official sources (gazettes, statistics offices), never grouped as media
+#
+# sections: argentina, mundo, mercados, tecnologia
+
+sources:
+  - id: example-daily
+    name: Example Daily
+    frontpage: https://www.example.com/
+    feeds:
+      - url: https://www.example.com/rss/politics.xml
+        section: argentina
+      - url: https://www.example.com/rss/economy.xml
+        section: mercados
+
+  - id: example-wire
+    name: Example Wire
+    feeds:
+      - url: https://wire.example.org/feed
+        section: mundo
+
+  - id: example-gazette
+    name: Example Gazette
+    primary: true
+    feeds:
+      - url: https://gazette.example.gov/rss
+        section: argentina

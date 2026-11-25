@@ -1,0 +1,94 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* theme before the first paint, so it never flashes: dark unless the reader chose light */
+try { if (localStorage.getItem("hermodr-theme") === "light") document.documentElement.classList.add("light"); } catch (e) {}
+document.documentElement.classList.add("js");
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Libre+Caslon+Display&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* 60-30-10: background 60, surfaces / rules / secondary text 30, accent 10. Ink is the reading text. */
+:root {
+  --bg: #141310; --surface: #1D1B17; --photo: #26231E; --rule: #39342C; --muted: #A69E91;
+  --ink: #EDE8DE; --accent: #E0605A;
+  --serif: Newsreader, Georgia, serif; --display: "Libre Caslon Display", Georgia, serif; --sans: Inter, system-ui, sans-serif;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  color-scheme: dark;
+}
+:root.light {
+  --bg: #FAF8F3; --surface: #F0ECE3; --photo: #E7E1D5; --rule: #D9D3C7; --muted: #5B554C;
+  --ink: #16130F; --accent: #A11D21;
+  color-scheme: light;
+}
+:root.theming, :root.theming * { transition: background-color .45s ease, color .45s ease, border-color .45s ease, fill .45s ease !important; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.5 var(--serif); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) 48px; }
+.label { font: 600 12px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.meta { font: 500 12px/1.4 var(--sans); letter-spacing: .04em; color: var(--muted); }
+
+/* ---- top bar and masthead ---- */
+.topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 24px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.topbar .right { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+.masthead { text-align: center; padding: clamp(20px, 4vw, 40px) 0 clamp(14px, 2vw, 22px); }
+.masthead h1 { margin: 0; font: 400 clamp(64px, 11vw, 132px)/.95 var(--display); letter-spacing: .01em; }
+.masthead h1 span { color: var(--accent); }
+.masthead p { margin: 10px 0 0; font-style: italic; font-size: clamp(16px, 1.8vw, 20px); color: var(--muted); }
+html.js .masthead h1 { animation: unfold 1s var(--ease) both; }
+html.js .masthead p { animation: fade .8s .35s ease both; }
+@keyframes unfold { from { opacity: 0; letter-spacing: .2em; filter: blur(4px); } to { opacity: 1; letter-spacing: .01em; filter: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- links and buttons ---- */
+.line { text-decoration: none; background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .35s var(--ease), color .2s; }
+.line:hover, .line:focus-visible { background-size: 100% 1px; }
+.more { color: var(--accent); font: 600 13px var(--sans); min-height: 44px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+.more i { font-style: normal; display: inline-block; transition: transform .3s var(--ease); }
+.more:hover i { transform: translateX(4px); }
+.btn { font: 600 13px var(--sans); color: var(--muted); background: none; border: 1px solid var(--rule); border-radius: 999px; padding: 6px 14px; min-height: 36px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: color .2s, border-color .2s, background-color .2s, transform .15s var(--ease); }
+.btn:hover { color: var(--ink); border-color: var(--muted); }
+.btn:active { transform: scale(.95); }
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
+.btn.done { color: var(--accent); border-color: var(--accent); }
+.btn svg { width: 14px; height: 14px; }
+.btn .check { stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset .45s var(--ease); }
+.btn.done .check { stroke-dashoffset: 0; }
+.btn .check-base { opacity: .3; transition: opacity .3s var(--ease); }
+.btn.done .check-base { opacity: 0; }
+
+/* theme switch: a moon in the dark that turns into a sun */
+.theme { width: 44px; height: 44px; border: 0; background: none; color: var(--ink); cursor: pointer; border-radius: 50%; display: inline-grid; place-items: center; transition: background-color .2s, transform .15s var(--ease); }
+.theme:hover { background: var(--surface); }
+.theme:active { transform: scale(.9); }
+.theme svg { width: 22px; height: 22px; transition: transform .6s var(--ease); transform: rotate(-40deg); }
+.theme .core { transform-origin: 12px 12px; transition: transform .5s var(--ease); }
+.theme .bite { transition: transform .5s var(--ease); }
+.theme .rays { transform-origin: 12px 12px; transition: transform .5s var(--ease), opacity .3s; transform: scale(0) rotate(-90deg); opacity: 0; }
+:root.light .theme svg { transform: rotate(90deg); }
+:root.light .theme .core { transform: scale(.62); }
+:root.light .theme .bite { transform: translate(15px, -11px); }
+:root.light .theme .rays { transform: none; opacity: 1; }
+
+/* ---- reveal on load and on scroll ---- */
+html.js .reveal { opacity: 0; transform: translateY(18px); }
+html.js .reveal.in { animation: rise .7s var(--ease) var(--d, 0s) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* ---- images: a soft pulse while they load, a fade when they're in ---- */
+.ph { position: relative; overflow: hidden; background: var(--photo); }
+.ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.06) 50%, transparent 70%); background-size: 220% 100%; animation: shimmer 1.6s linear infinite; }
+.ph.loaded::after { display: none; }
+.ph img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.03); transition: opacity .6s ease, transform 1.2s var(--ease); }
+.ph.loaded img { opacity: 1; transform: none; }
+@keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  html.js .reveal { opacity: 1; transform: none; }
+  .ph img { opacity: 1; transform: none; }
+}
+</style>

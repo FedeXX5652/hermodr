@@ -1,0 +1,241 @@
+{%- macro badges(c) -%}
+<div class="badges">
+  {%- if c.updated %}<span class="badge">Actualizado</span>{% endif -%}
+  {%- if c.blind_spot %}<span class="badge">Punto ciego</span>{% endif -%}
+  {%- if c.kind == "extract" %}<span class="badge quiet">Extracto de {{ c.extract_source }}</span>
+  {%- elif not c.cross %}<span class="badge quiet">Una sola familia</span>{% endif -%}
+</div>
+{%- endmacro -%}
+
+{%- macro image(c, ratio) -%}
+{%- if c.image %}<div class="ph" style="aspect-ratio: {{ ratio }}"><img src="{{ c.image }}" alt="" loading="lazy" decoding="async"></div>{% endif -%}
+{%- endmacro -%}
+
+{%- macro footer(c, why=true) -%}
+{%- if why %}<p class="why">{{ c.why | join(" · ") }}{% if c.blind_spot %} · Cubierta casi solo por la familia {{ c.blind_spot }}{% endif %}</p>{% endif %}
+<div class="foot">
+  <span class="meta">{{ c.source }} · {{ c.time }}</span>
+  <a class="more" href="{{ c.url }}" target="_blank" rel="noopener" data-click>Leer la nota completa <i>→</i></a>
+</div>
+<details>
+  <summary class="meta">Cómo la titularon</summary>
+  <ul>{% for h in c.headlines %}<li><a class="line" href="{{ h.url }}" target="_blank" rel="noopener" data-click>{{ h.title }}</a> <span class="meta">{{ h.source }}</span></li>{% endfor %}</ul>
+</details>
+<div class="votes">
+  <button class="btn" type="button" data-vote="useful"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="check-base" d="M3 8.5l3.2 3L13 4.5"/><path class="check" d="M3 8.5l3.2 3L13 4.5"/></svg>Me sirvió</button>
+  <button class="btn" type="button" data-vote="not_interested">No me interesa</button>
+</div>
+{%- endmacro -%}
+
+<!doctype html>
+<html lang="es">
+<head>
+{% include "_head.html.j2" %}
+<title>{{ title }} · {{ date }}</title>
+<style>
+nav.sections { position: sticky; top: 0; z-index: 3; background: var(--bg); display: flex; flex-wrap: wrap; justify-content: center; gap: 0 clamp(14px, 2.4vw, 30px); border-top: 1px solid var(--ink); border-bottom: 4px double var(--ink); padding: 2px 0; font: 600 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+nav.sections a { text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+html.js nav.sections { animation: fade .8s .5s ease both; }
+.stacked { margin-top: 24px; padding: 14px 18px; border: 1px solid var(--accent); font-size: 17px; line-height: 1.45; }
+.stacked strong { color: var(--accent); font-weight: 600; }
+article { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+article h2, article h3 { margin: 0; font-weight: 600; }
+article p { margin: 0; }
+.summary p + p { margin-top: 6px; }
+.why { font: italic 15px/1.45 var(--serif); color: var(--muted); }
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0 14px; }
+details summary { cursor: pointer; list-style: none; min-height: 32px; display: inline-flex; align-items: center; gap: 6px; }
+details summary::-webkit-details-marker { display: none; }
+details summary::before { content: "+"; font: 600 14px var(--sans); color: var(--accent); transition: transform .3s var(--ease); display: inline-block; }
+details[open] summary::before { transform: rotate(45deg); }
+details ul { margin: 4px 0 0; padding-left: 18px; font-size: 15px; }
+details[open] ul { animation: rise .4s var(--ease) both; }
+.votes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badges:empty { display: none; }
+.badge { font: 600 10px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; padding: 4px 6px; }
+.badge.quiet { color: var(--muted); border-color: var(--rule); }
+
+#portada { display: flex; flex-wrap: wrap; gap: 36px 44px; padding: 32px 0 40px; border-bottom: 1px solid var(--rule); }
+#portada .lead { flex: 2 1 520px; gap: 14px; }
+#portada .lead h2 { font-size: clamp(30px, 4vw, 48px); line-height: 1.06; font-weight: 700; letter-spacing: -.01em; }
+#portada .lead .summary { font-size: clamp(18px, 1.7vw, 21px); }
+#portada aside { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; }
+#portada aside article { padding: 18px 0; border-top: 1px solid var(--rule); gap: 8px; }
+#portada aside h3 { font-size: 23px; line-height: 1.18; }
+.topic { padding-top: 36px; }
+.topic > h2, .boxed > h2 { margin: 0 0 22px; padding-top: 10px; border-top: 3px solid var(--ink); font-size: 30px; line-height: 1.1; font-weight: 700; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 34px 30px; }
+.grid h3 { font-size: 22px; line-height: 1.2; }
+.grid .summary { font-size: 16px; }
+#deberias_saber { margin-top: 48px; padding: clamp(20px, 3vw, 32px); background: var(--surface); }
+#deberias_saber > h2 { margin: 0; font-size: 30px; font-weight: 700; }
+.intro { margin: 6px 0 24px; font-style: italic; font-size: 17px; color: var(--muted); }
+#deberias_saber article { padding-top: 14px; border-top: 1px solid var(--rule); }
+#para_explorar { padding-top: 44px; }
+#para_explorar > h2 { margin: 0; padding-top: 10px; border-top: 3px solid var(--ink); font-size: 30px; font-weight: 700; }
+#para_explorar .grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+footer.page { margin-top: 52px; padding-top: 16px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; }
+.empty { text-align: center; padding: 80px 20px; font-style: italic; font-size: 24px; color: var(--muted); }
+.offline { margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="topbar meta">
+    <span>{{ date }}</span>
+    <div class="right">
+      <span>Edición N.º {{ edition_id }}</span>
+      <a class="line" href="../archive.html">Ediciones anteriores</a>
+      {% include "_theme_button.html.j2" %}
+    </div>
+  </div>
+  <div class="masthead">
+    <h1>{{ title[:-1] }}<span>{{ title[-1:] }}</span></h1>
+    <p>Lo que el mensajero trajo hoy</p>
+  </div>
+  {% if nav %}<nav class="sections" aria-label="Secciones">{% for s in nav %}<a class="line" href="#{{ s.key }}">{{ s.name }}</a>{% endfor %}</nav>{% endif %}
+</header>
+
+{% if stacked and lead %}
+<div class="stacked reveal"><strong>Edición acumulada.</strong> Cubre {{ stacked_range }}, así que entra solo lo más importante, en el espacio de un día.</div>
+{% endif %}
+
+{% if lead %}
+<section id="portada" aria-label="Portada">
+  <article class="lead reveal" data-story="{{ lead.id }}">
+    {{ image(lead, "16 / 9") }}
+    <span class="label">{{ lead.section_name }}</span>
+    {{ badges(lead) }}
+    <h2>{{ lead.headline }}</h2>
+    <div class="summary">{% for p in lead.sentences %}<p>{{ p }}</p>{% endfor %}</div>
+    {{ footer(lead) }}
+  </article>
+  {% if side %}
+  <aside aria-label="También en portada">
+    {% for c in side %}
+    <article class="reveal" data-story="{{ c.id }}">
+      <span class="label">{{ c.section_name }}</span>
+      {{ badges(c) }}
+      <h3>{{ c.headline }}</h3>
+      <div class="summary">{% for p in c.sentences %}<p>{{ p }}</p>{% endfor %}</div>
+      {{ footer(c) }}
+    </article>
+    {% endfor %}
+  </aside>
+  {% endif %}
+</section>
+
+{% for t in topics %}
+<section class="topic" id="{{ t.key }}" aria-label="{{ t.name }}">
+  <h2 class="reveal">{{ t.name }}</h2>
+  <div class="grid">
+  {% for c in t.cards %}
+    <article class="reveal" data-story="{{ c.id }}">
+      {{ image(c, "3 / 2") }}
+      {{ badges(c) }}
+      <h3>{{ c.headline }}</h3>
+      <div class="summary">{% for p in c.sentences %}<p>{{ p }}</p>{% endfor %}</div>
+      {{ footer(c) }}
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+{% if should_know %}
+<section id="deberias_saber" aria-label="Deberías saber" class="reveal">
+  <h2>Deberías saber</h2>
+  <p class="intro">Lo importante que no está en tu perfil.</p>
+  <div class="grid">
+  {% for c in should_know %}
+    <article class="reveal" data-story="{{ c.id }}">
+      {{ badges(c) }}
+      <h3>{{ c.headline }}</h3>
+      <div class="summary">{% for p in c.sentences %}<p>{{ p }}</p>{% endfor %}</div>
+      {{ footer(c) }}
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if explore %}
+<section id="para_explorar" aria-label="Para explorar">
+  <h2 class="reveal">Para explorar</h2>
+  <p class="intro">Algo fuera de tu burbuja de siempre.</p>
+  <div class="grid">
+  {% for c in explore %}
+    <article class="reveal" data-story="{{ c.id }}">
+      {{ image(c, "3 / 2") }}
+      <span class="label">{{ c.section_name }}</span>
+      {{ badges(c) }}
+      <h3>{{ c.headline }}</h3>
+      <div class="summary">{% for p in c.sentences %}<p>{{ p }}</p>{% endfor %}</div>
+      {{ footer(c) }}
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
+<p class="meta offline" id="offline" hidden>Abierta desde el disco: los votos y los clics se guardan solo con <code>hermodr serve</code>.</p>
+{% else %}
+<p class="empty reveal">Sin novedades desde las {{ empty_since or built }}.</p>
+{% endif %}
+
+<footer class="page meta">
+  <span>Armado a las {{ built }} · {{ stats.notes }} notas leídas de {{ stats.sources }} fuentes · {% if no_model %}Sin modelo: extractos de las notas{% else %}Resúmenes hechos en casa, con un modelo local{% endif %}</span>
+  <a class="line" href="../archive.html">Ediciones anteriores</a>
+</footer>
+</div>
+
+<script type="application/json" id="data">{{ data | safe }}</script>
+{% include "_theme_script.html.j2" %}
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById("data").textContent);
+  var served = location.protocol.indexOf("http") === 0;
+
+  // reveal: what's on screen comes in one after another; the rest, as it scrolls into view
+  var items = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+  if ("IntersectionObserver" in window) {
+    var batch = 0, timer = null;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.style.setProperty("--d", Math.min(batch++, 8) * 0.07 + "s");
+        e.target.classList.add("in");
+        io.unobserve(e.target);
+      });
+      clearTimeout(timer); timer = setTimeout(function () { batch = 0; }, 120);
+    }, { rootMargin: "0px 0px -6% 0px" });
+    items.forEach(function (el) { io.observe(el); });
+  } else {
+    items.forEach(function (el) { el.classList.add("in"); });
+  }
+
+  // images fade in when they are ready
+  document.querySelectorAll(".ph img").forEach(function (img) {
+    function done() { img.parentNode.classList.add("loaded"); }
+    if (img.complete && img.naturalWidth) done(); else { img.addEventListener("load", done); img.addEventListener("error", done); }
+  });
+
+  function send(story, kind) {
+    if (!served) return Promise.resolve(false);
+    return fetch("/api/event", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ edition: data.edition, story: story, kind: kind }) }).then(function (r) { return r.ok; }, function () { return false; });
+  }
+  if (!served) { var o = document.getElementById("offline"); if (o) o.hidden = false; }
+  document.querySelectorAll("article[data-story]").forEach(function (card) {
+    var story = Number(card.dataset.story);
+    card.querySelectorAll("[data-click]").forEach(function (a) { a.addEventListener("click", function () { send(story, "click"); }); });
+    card.querySelectorAll("[data-vote]").forEach(function (b) {
+      if (!served) { b.disabled = true; b.title = "Se guarda solo con hermodr serve"; return; }
+      b.addEventListener("click", function () { send(story, b.dataset.vote).then(function (ok) { if (ok) b.classList.add("done"); }); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

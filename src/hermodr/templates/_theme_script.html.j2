@@ -1,0 +1,12 @@
+<script>
+(function () {
+  var root = document.documentElement, b = document.getElementById("theme");
+  if (!b) return;
+  b.addEventListener("click", function () {
+    root.classList.add("theming");
+    root.classList.toggle("light");
+    try { localStorage.setItem("hermodr-theme", root.classList.contains("light") ? "light" : "dark"); } catch (e) {}
+    setTimeout(function () { root.classList.remove("theming"); }, 500);
+  });
+})();
+</script>

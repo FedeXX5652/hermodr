@@ -1,0 +1,7 @@
+# Media families: outlets that tend to cover the same things the same way.
+# hermodr families suggest proposes them from the data (families.suggested.yaml); you correct them here.
+# A source that is not listed is its own family. Names are free; no political labels are needed.
+
+families:
+  family-a: [example-daily]
+  family-b: [example-wire]
