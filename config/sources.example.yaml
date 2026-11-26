@@ -7,6 +7,15 @@
 # primary   : true for official sources (gazettes, statistics offices), never grouped as media
 #
 # sections: argentina, mundo, mercados, tecnologia
+# A feed's section can also be auto: each note goes to the first section_rules entry with a piece that is
+# in its url path, or to the feed's fallback if none matches. skip drops the note.
+# hermodr discover https://www.example.com/ lists the feeds of a site and the paths of their notes.
+
+section_rules:
+  skip: [/horoscopo/]
+  mercados: [/economia/, /finanzas/]
+  mundo: [/mundo/, /internacional/]
+  tecnologia: [/tecnologia/]
 
 sources:
   - id: example-daily
@@ -23,6 +32,13 @@ sources:
     feeds:
       - url: https://wire.example.org/feed
         section: mundo
+
+  - id: example-portal
+    name: Example Portal
+    feeds:
+      - url: https://portal.example.net/rss
+        section: auto
+        fallback: argentina
 
   - id: example-gazette
     name: Example Gazette

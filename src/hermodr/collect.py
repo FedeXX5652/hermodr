@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import time
+from collections import Counter
 from datetime import datetime, timezone
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
@@ -34,11 +35,12 @@ class Fetcher:
     def __init__(self, cfg, transport=None):
         self.delay = cfg.get("per_host_delay_s", 1.0)
         self.max_bytes = cfg.get("max_article_kb", 3000) * 1024
+        self.max_front = cfg.get("max_frontpage_kb", 8000) * 1024
         self.last = {}
         self.client = httpx.Client(timeout=cfg.get("timeout_s", 20), follow_redirects=True, transport=transport,
                                    headers={"User-Agent": cfg.get("user_agent", "hermodr")})
 
-    def get(self, url):
+    def get(self, url, front=False):
         host = urlsplit(url).netloc
         wait = self.last.get(host, 0) + self.delay - time.monotonic()
         if wait > 0:
@@ -46,7 +48,7 @@ class Fetcher:
         self.last[host] = time.monotonic()
         r = self.client.get(url)
         r.raise_for_status()
-        if len(r.content) > self.max_bytes:
+        if len(r.content) > (self.max_front if front else self.max_bytes):
             raise ValueError(f"{len(r.content) // 1024} KB, over the limit")
         return r
 
@@ -99,7 +101,7 @@ def extract_article(fetcher, url):
 
 
 def frontpage_links(fetcher, url):
-    html = fetcher.get(url).text
+    html = fetcher.get(url, front=True).text
     seen, out = set(), []
     for href in re.findall(r'<a\s[^>]*href="([^"#]+)"', html, re.I):
         u = clean_url(urljoin(url, href))
@@ -109,6 +111,18 @@ def frontpage_links(fetcher, url):
         if len(out) >= FRONTPAGE_TOP:
             break
     return set(out)
+
+
+def section_of(url, fd, rules):
+    """The feed's section, or for section: auto the first rule whose piece is in the url path.
+    None means skip the note."""
+    if fd["section"] != "auto":
+        return fd["section"]
+    path = urlsplit(url).path.lower()
+    for sec, pieces in rules.items():
+        if any(p.lower() in path for p in pieces):
+            return None if sec == "skip" else sec
+    return fd["fallback"]
 
 
 def collect(con, settings, transport=None, log=print):
@@ -135,7 +149,12 @@ def collect(con, settings, transport=None, log=print):
                                 "ON CONFLICT(url) DO UPDATE SET last_error = excluded.last_error, error = excluded.error",
                                 (fd["url"], now_iso(), str(e)[:300]))
                     continue
+                kept = 0
                 for e in entries:
+                    section = section_of(e["url"], fd, settings.section_rules)
+                    if section is None:
+                        continue
+                    kept += 1
                     if con.execute("SELECT 1 FROM notes WHERE url = ?", (e["url"],)).fetchone():
                         if e["url"] in front:
                             con.execute("UPDATE notes SET frontpage = 1 WHERE url = ?", (e["url"],))
@@ -143,12 +162,13 @@ def collect(con, settings, transport=None, log=print):
                     text, img = (extract_article(f, e["url"]) if cfg.get("fetch_articles", True) else ("", None))
                     con.execute("INSERT INTO notes(source, section, url, title, lead, text, image_url, published, "
                                 "fetched, text_hash, frontpage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                                (s["id"], fd["section"], e["url"], e["title"], e["lead"], text,
+                                (s["id"], section, e["url"], e["title"], e["lead"], text,
                                  e["image_url"] or img, e["published"], now_iso(),
                                  text_hash(e["title"], e["lead"], text), int(e["url"] in front)))
                     new += 1
                 con.commit()
-                log(f"  {s['id']:<20} {fd['section']:<11} {len(entries):>3} in feed")
+                log(f"  {s['id']:<20} {fd['section']:<11} {len(entries):>3} in feed"
+                    + (f", {len(entries) - kept} skipped by section_rules" if kept < len(entries) else ""))
     finally:
         f.close()
     return new, problems
@@ -171,6 +191,9 @@ def check_sources(settings, transport=None, log=print):
                 status = "ok  " if entries and text else "WARN"
                 log(f"{status} {s['id']:<20} {len(entries):>3} notes, newest {newest[:16]}, "
                     f"article text {len(text.split())} words  {fd['url']}")
+                if fd["section"] == "auto":
+                    split = Counter(section_of(e["url"], fd, settings.section_rules) or "skip" for e in entries)
+                    log(f"     auto: " + ", ".join(f"{k} {v}" for k, v in split.most_common()))
             if s.get("frontpage"):
                 try:
                     log(f"ok   {s['id']:<20} front page: {len(frontpage_links(f, s['frontpage']))} links")
@@ -179,3 +202,44 @@ def check_sources(settings, transport=None, log=print):
     finally:
         f.close()
     return ok
+
+
+FEED_GUESSES = ("/feed", "/feed/", "/rss", "/rss/", "/rss.xml", "/feed.xml", "/index.xml", "/atom.xml",
+                "/arc/outboundfeeds/rss/?outputType=xml")
+
+
+def discover(settings, urls, transport=None, log=print):
+    """For each home page: the feeds it announces in its <link> tags plus the usual paths that answer a feed,
+    each with how many notes it has and the first piece of their paths (what section_rules work with)."""
+    f = Fetcher(settings.general.get("collect", {}), transport)
+    try:
+        for home in urls:
+            log(f"\n=== {home}")
+            found = []
+            try:
+                html = f.get(home, front=True).text
+                for tag in re.findall(r"<link\b[^>]*>", html, re.I):
+                    if re.search(r"application/(rss|atom)\+xml", tag, re.I):
+                        href = re.search(r'href=["\']([^"\']+)', tag, re.I)
+                        if href:
+                            found.append(urljoin(home, href.group(1).replace("&amp;", "&")))
+                log(f"  announces {len(found)} feeds")
+            except Exception as e:
+                log(f"  home page: {e}")
+            seen = set()
+            for u in found + [urljoin(home, g) for g in FEED_GUESSES]:
+                if u in seen:
+                    continue
+                seen.add(u)
+                try:
+                    entries = read_feed(f, u)
+                except Exception:
+                    continue
+                if not entries:
+                    continue
+                paths = Counter("/" + (urlsplit(e["url"]).path.strip("/").split("/") or [""])[0] + "/" for e in entries)
+                newest = max(e["published"] for e in entries)[:16]
+                log(f"  FEED {u}\n       {len(entries)} notes, newest {newest}, paths: "
+                    + ", ".join(f"{k} {v}" for k, v in paths.most_common(6)))
+    finally:
+        f.close()

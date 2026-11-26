@@ -8,6 +8,7 @@ user_agent      = "hermodr/0.1 (personal news digest)"
 timeout_s       = 20
 per_host_delay_s = 1.0               # pause between requests to the same site
 max_article_kb  = 3000               # bigger pages are skipped
+max_frontpage_kb = 8000              # home pages are heavier (Clarín is over 3 MB)
 fetch_articles  = true               # false: work only with what the feed brings (title + summary)
 first_run_hours = 24                 # how far back the very first edition looks
 

@@ -36,6 +36,11 @@ def cmd_sources(a):
     sys.exit(0 if check_sources(_settings(a.root, need_model=False)) else 1)
 
 
+def cmd_discover(a):
+    from .collect import discover
+    discover(_settings(a.root, need_model=False), a.urls)
+
+
 def cmd_model(a):
     from .llm import Model, ModelError
     s = _settings(a.root)
@@ -129,6 +134,9 @@ def main():
     sub.add_parser("init", help="creates the config files from the .example ones").set_defaults(f=cmd_init)
     sub.add_parser("check", help="validates every config file").set_defaults(f=cmd_check)
     sub.add_parser("sources", help="tests every feed").set_defaults(f=cmd_sources)
+    dc = sub.add_parser("discover", help="finds the feeds of one or more home pages")
+    dc.add_argument("urls", nargs="+")
+    dc.set_defaults(f=cmd_discover)
     sub.add_parser("model", help="starts the model, asks for a json and stops it").set_defaults(f=cmd_model)
     r = sub.add_parser("run", help="builds the next edition")
     r.add_argument("--no-model", action="store_true", help="extracts instead of summaries; doesn't start the model")

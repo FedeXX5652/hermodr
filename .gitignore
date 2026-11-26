@@ -1,6 +1,6 @@
-# real configs: personal, never pushed (the .example files are the public skeletons)
-config/*.toml
-config/*.yaml
+# config/: only the .example files are public. Everything else in there is personal (real configs,
+# .bak copies, families.suggested.yaml) and never pushed
+config/*
 !config/*.example.toml
 !config/*.example.yaml
 

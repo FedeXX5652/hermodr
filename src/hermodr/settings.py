@@ -25,6 +25,7 @@ class Settings:
     families: dict
     profile: dict
     weights: dict
+    section_rules: dict = field(default_factory=dict)
     data_dir: str = field(init=False)
 
     def __post_init__(self):
@@ -83,8 +84,21 @@ def load(root, need_model=True):
         for j, fd in enumerate(s.get("feeds") or []):
             if not isinstance(fd, dict) or not str(fd.get("url", "")).startswith("http"):
                 errors.append(f"{where} ({s['id']}) > feed #{j + 1}: needs an http url")
+            elif fd.get("section") == "auto":
+                if fd.get("fallback") not in SECTIONS:
+                    errors.append(f"{where} ({s['id']}) > {fd['url']}: section auto needs a fallback, one of "
+                                  f"{', '.join(SECTIONS)}")
             elif fd.get("section") not in SECTIONS:
-                errors.append(f"{where} ({s['id']}) > {fd['url']}: section must be one of {', '.join(SECTIONS)}")
+                errors.append(f"{where} ({s['id']}) > {fd['url']}: section must be auto or one of {', '.join(SECTIONS)}")
+    rules = raw["sources.yaml"].get("section_rules") or {}
+    if not isinstance(rules, dict):
+        errors.append("sources.yaml > section_rules: has to be section: [path pieces]")
+        rules = {}
+    for sec, pieces in rules.items():
+        if sec not in SECTIONS + ("skip",):
+            errors.append(f"sources.yaml > section_rules > {sec}: unknown, use one of {', '.join(SECTIONS)} or skip")
+        if not isinstance(pieces, list) or not all(isinstance(x, str) and x for x in pieces):
+            errors.append(f"sources.yaml > section_rules > {sec}: needs a list of path pieces like /economia/")
 
     # ---- families: every listed source has to exist, and only once ----
     fams, seen = (raw["families.yaml"].get("families") or {}), {}
@@ -135,4 +149,4 @@ def load(root, need_model=True):
     if errors:
         raise ConfigError(errors)
     return Settings(root=root, general=raw["hermodr.toml"], model=raw.get("model.toml") or {},
-                    sources=sources, families=fams, profile=prof, weights=w)
+                    sources=sources, families=fams, profile=prof, weights=w, section_rules=rules)

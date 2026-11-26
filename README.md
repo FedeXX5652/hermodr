@@ -8,7 +8,7 @@ Hermóðr was the messenger that rode to Hel and came back with the news. Seemed
 
 ## What it does
 
-- Reads RSS feeds (`config/sources.yaml`) and pulls the full text of each note.
+- Reads RSS feeds (`config/sources.yaml`) and pulls the full text of each note. A feed can have a fixed section, or `auto`: the section comes from the note's url (`/economia/` goes to mercados), with rules I set once.
 - Groups notes that tell the same thing into one story. Wire copies don't count as extra coverage.
 - Scores each story: how many outlets, how many *families* of outlets, how long it's been going, front pages, and how much it matches my profile. Every story says why it's there.
 - Summary in one or two sentences, only with facts that show up in at least two families. Every number and every name is checked against the notes; what can't be checked is dropped.
@@ -33,6 +33,7 @@ uv sync
 uv run hermodr init           # creates config/*.toml and *.yaml from the .example files
                               # edit them: sources, profile, model
 uv run hermodr check          # validates all of it, every error at once
+uv run hermodr discover URL   # finds the feeds of a home page, with the paths of its notes
 uv run hermodr sources        # tests every feed
 uv run hermodr model          # starts the model, asks for a json, stops it
 ```

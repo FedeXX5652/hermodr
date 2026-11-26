@@ -30,3 +30,5 @@ packages = ["src/hermodr"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# urllib3 warns about socks proxies on import; there is none
+filterwarnings = ["ignore:SOCKS support in urllib3"]
